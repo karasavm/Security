@@ -34,6 +34,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('superSecret', config.secret);
 
+var cors = require('cors');
+
+// use it before all route definitions
+app.use(cors({origin: '*'}));
+
 app.use('/', require('./routes/index'));
 // app.use('/users', require('./routes/users'));
 

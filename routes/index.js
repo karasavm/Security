@@ -16,12 +16,19 @@ var Client = mongoose.model('Client');
 router.use('/users', [mid.ensureAuthenticated]);
 router.use('/securities', [mid.ensureAuthenticated]);
 router.use('/clients', [mid.ensureAuthenticated]);
+var path = require('path');
 
+router.get('/admin', function(req, res, next) {
+  console.log("ffffffffffffffffffffff")
+  return res.sendFile(path.join(__dirname+'/../index.html'));
+  return res.sendFile(path.join(__dirname + '/../index2.html'));
 
+});
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
+  return res.sendFile(path.join(__dirname + '/../index.html'));
+  res.send('ok');}
+);
 
 
 // --- AUTH
@@ -79,41 +86,12 @@ router.post('/auth/login', function(req, res, next){
   })(req, res, next);
 });
 
+//todo: transfer outside of routes the middlewares
 
 // --- USERS
-router.param('userId', function(req, res, next, userId) {
-
-  User.findOne({_id: userId}, function(err, data){
-
-    if (err) {return next(err)};
-
-    if (data) {
-      req.user = data;
-      next();
-    } else {
-      return res.send(404,{
-        'status': 404,
-        'code': null, // custom code that makes sense for your application
-        'message': `User '${req.params.userId}' does not exist.'`
-      });
-    }
-  });
-
-
-});
-router.get('/users', [mid.loadUsersByRole], function(req, res){
-
-  res.json(req.users);
-  
-});
-router.put('/users/:userId', [mid.andRestrictTo(mid.SUPERADMIN)], function(req, res, next){
-
-  req.user.update({_id: req.user._id}, req.body, function (err, result) { // result is not the updated user
-    if (err) {return next(err);}
-    res.json({message: 'User updated!'}); //todo: handle it
-  })
-
-});
+router.param('userId', mid.loadUserById);
+router.get('/users', mid.loadUsersByRole);
+router.put('/users/:userId', [mid.andRestrictTo(mid.SUPERADMIN)], mid.updateUserById);
 
 
 // --- SECURITY
@@ -140,6 +118,7 @@ router.param('securityId', function(req, res, next, securityId) {
 router.get('/securities', [mid.loadSecuritiesByRole], function(req, res){
   res.json(req.securities);
 });
+
 router.post('/securities', [mid.andRestrictTo(mid.SUPERADMIN)], function(req, res, next){
 
   var security = Security({
@@ -153,8 +132,9 @@ router.post('/securities', [mid.andRestrictTo(mid.SUPERADMIN)], function(req, re
 
 });
 router.put('/securities/:securityId', [mid.andRestrictTo(mid.SUPERADMIN)], function(req, res, next){
-  req.security.update({_id: req.security._id}, req.body, function (err, result) { // result is not the updated security
+  Security.findOneAndUpdate({_id: req.security._id}, req.body, function (err, result) { // result is not the updated security
     if (err) {return next(err);}
+
     res.json({message: 'Security updated!'}); //todo: handle it
   })
 
@@ -184,6 +164,7 @@ router.param('clientId', function(req, res, next, clientId) {
 router.get('/clients', [mid.loadClientsByRole], function(req, res){
   res.json(req.clients);
 });
+
 router.post('/clients', [mid.andRestrictTo(mid.SUPERADMIN)], function(req, res, next){
 
     var client = Client({
@@ -199,7 +180,7 @@ router.post('/clients', [mid.andRestrictTo(mid.SUPERADMIN)], function(req, res, 
 
   });
 router.put('/clients/:clientId', [mid.andRestrictTo(mid.SUPERADMIN)], function(req, res, next){
-  req.client.update({_id: req.client._id}, req.body, function (err, result) { // result is not the updated client
+  Client.findOneAndUpdate({_id: req.client._id}, req.body, function (err, result) { // result is not the updated client
     if (err) {return next(err);}
     res.json({message: 'Client updated!'}); //todo: handle it
   })

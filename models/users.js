@@ -2,6 +2,8 @@ var mongoose = require('mongoose');
 var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
 
+//todo: validation on role and security/client existence
+//todo: if role something client or security should apear, and null to other one.
 
 var
   SUPERADMIN = '0',
@@ -16,7 +18,7 @@ var UserSchema = new mongoose.Schema({
     hash         : String,
     salt         : String,
     displayName  : String,
-    role         : { type: String, enum: ROLES },
+    role         : { type: String, enum: ROLES , required: true},
     security: {type: mongoose.Schema.Types.ObjectId, ref: 'Security'},
     client: {type: mongoose.Schema.Types.ObjectId, ref: 'Client'},
     active: {type: Boolean, default: true}
