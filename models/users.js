@@ -22,9 +22,8 @@ var UserSchema = new mongoose.Schema({
     security: {type: mongoose.Schema.Types.ObjectId, ref: 'Security'},
     client: {type: mongoose.Schema.Types.ObjectId, ref: 'Client'},
     active: {type: Boolean, default: true}
-  
-
 });
+
 
 UserSchema.statics.validEmail = function(email) {
   return true;

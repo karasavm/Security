@@ -1,0 +1,14 @@
+<a ui-sref="newSecurity" class="btn-primary btn-lg nodecoration">Add New Security</a>
+<table class="table securitytable">
+    <tr>
+        <td><h3>All Securities</h3></td>
+        <td></td>
+    </tr>
+    <tr ng-repeat="security in securities">
+        <td>{{security.name}}</td>
+        <td>
+            <a class="btn btn-primary" ui-sref="viewSecurity({id:security._id})">View</a>
+            <a class="btn btn-danger"  ng-click="deleteSecurity(security)">Delete</a>
+        </td>
+    </tr>
+</table>

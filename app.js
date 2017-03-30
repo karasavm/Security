@@ -5,7 +5,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var config = require('./config/config');
-
+const formidable = require('express-formidable');
 
 
 var app = express();
@@ -16,6 +16,7 @@ mongoose.connect('mongodb://localhost/security_tests');
 require('./models/users');
 require('./models/securities');
 require('./models/clients');
+require('./models/checkpoints');
 // -------------------------
 
 require('./config/passport');
@@ -24,7 +25,11 @@ require('./config/passport');
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-
+// app.use(formidable({
+//   encoding: 'utf-8',
+//   uploadDir: './uploads',
+//   multiples: true, // req.files to be arrays of files
+// }));
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
@@ -32,6 +37,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, 'js')));
+app.use(express.static(path.join(__dirname, 'css')));
+// app.use(express.static('public'));
 app.set('superSecret', config.secret);
 
 var cors = require('cors');

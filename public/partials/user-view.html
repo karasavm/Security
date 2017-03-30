@@ -1,0 +1,18 @@
+<table class="table usertable">
+    <tr>
+        <td><h3>Details for {{user.displayName}}</h3></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Role</td>
+        <td>{{user.role}}</td>
+    </tr>
+    <tr>
+        <td>Email</td>
+        <td>{{user.email}}</td>
+    </tr>
+</table>
+
+<div>
+    <a class="btn btn-primary" ui-sref="editUser({id:user._id})">Edit</a>
+</div>

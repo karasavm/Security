@@ -12,12 +12,24 @@ var
   CLIENT_ADMIN = '3';
 
 exports.SUPERADMIN = SUPERADMIN;
+exports.SECURITY_GUARD = SECURITY_GUARD;
 
 exports.ensureAuthenticated = function(req, res, next) {
-  return next();
+  // console.log(req.headers)
+  // req.auth = {
+  //   "_id": "58c29d8c1e898b2eb8defe6e",
+  //   "role": "0",
+  //   "displayName": "SUPERADMIN",
+  //   "hash": "5759b02a3c212091921fab8456c5f8ccf298978dd1220532b69bb6c337f4b51c3feef263782f62f11f01b77c8151dc38414ea83d2bd86090e8c51e20dcf75aec",
+  //   "salt": "f653efbb0cfd6b132124c3ea65fcc55f",
+  //   "email": "karasavm@gmail.com",
+  //   "__v": 0,
+  //   "active": true
+  // };
+  // return next();
   //todo: handle with better way the failure, respond beeter json and code etc. see jwt-express
   // check header or url parameters or post parameters for token
-  var token = req.body.access_token || req.query.access_token || req.headers['x-access-token'];
+  var token = req.body.access_token || req.query.access_token || req.headers['x-access-token'] || req.headers['authorization'];
 
   // decode token
   if (token) {
@@ -65,12 +77,12 @@ exports.loadUserById = function(req, res, next, userId) {
 
 exports.loadUsersByRole = function(req, res, next) {
 
-  User.find(function (err, data) {
-    if (err) {return next(err);}
-    res.json(data);
-
-  });
-  return;
+  // User.find(function (err, data) {
+  //   if (err) {return next(err);}
+  //   res.json(data);
+  //
+  // });
+  // return;
   if (req.auth.role == SUPERADMIN) {
     
     User.find(function (err, data) {

@@ -8,7 +8,10 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Security = mongoose.model('Security');
 var Client = mongoose.model('Client');
-
+var Checkpoint = mongoose.model('Checkpoint');
+var path = require('path');
+var fs = require('fs');
+var formidable = require('formidable');
 // var jwt_auth = jwt({secret: 'SECRET', uuserProperty: 'user', requestProperty: 'auth'});
 
 
@@ -16,14 +19,21 @@ var Client = mongoose.model('Client');
 router.use('/users', [mid.ensureAuthenticated]);
 router.use('/securities', [mid.ensureAuthenticated]);
 router.use('/clients', [mid.ensureAuthenticated]);
+router.use('/checkpoints', [mid.ensureAuthenticated]);
+
 var path = require('path');
 
-router.get('/admin', function(req, res, next) {
-  console.log("ffffffffffffffffffffff")
-  return res.sendFile(path.join(__dirname+'/../index.html'));
-  return res.sendFile(path.join(__dirname + '/../index2.html'));
-
+// router.get('*', function(req, res, next) {
+//   // return res.sendFile('/admin.html');
+//   // return res.sendFile(path.join(__dirname+'/../../ng-admin-demo/index.html'));
+//   return res.sendFile(path.join(__dirname+'/../public/index.html'));
+// });
+router.get('/_login', function(req, res, next) {
+  // return res.sendFile('/admin.html');
+  // return res.sendFile(path.join(__dirname+'/../../ng-admin-demo/index.html'));
+  return res.sendFile(path.join(__dirname+'/../public/login.html'));
 });
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
   return res.sendFile(path.join(__dirname + '/../index.html'));
@@ -32,7 +42,7 @@ router.get('/', function(req, res, next) {
 
 
 // --- AUTH
-router.post('/auth/register', function(req, res, next){
+router.post('/users', function(req, res, next){
   if(!req.body.email || !req.body.password || !req.body.displayName || !req.body.role){
     return res.status(400).json({message: 'Please fill out all fields'});
   }
@@ -91,7 +101,11 @@ router.post('/auth/login', function(req, res, next){
 // --- USERS
 router.param('userId', mid.loadUserById);
 router.get('/users', mid.loadUsersByRole);
+
 router.put('/users/:userId', [mid.andRestrictTo(mid.SUPERADMIN)], mid.updateUserById);
+router.get('/users/:userId', [mid.andRestrictTo(mid.SUPERADMIN)], function (req, res) {
+  res.json(req.user)
+});
 
 
 // --- SECURITY
@@ -139,7 +153,10 @@ router.put('/securities/:securityId', [mid.andRestrictTo(mid.SUPERADMIN)], funct
   })
 
 });
+router.get('/securities/:securityId', [mid.andRestrictTo(mid.SUPERADMIN)], function(req, res, next){
+  res.json(req.security)
 
+});
 // --- CLIENT
 router.param('clientId', function(req, res, next, clientId) {
 
@@ -186,8 +203,80 @@ router.put('/clients/:clientId', [mid.andRestrictTo(mid.SUPERADMIN)], function(r
   })
 
 });
+router.get('/clients/:clientId', [mid.andRestrictTo(mid.SUPERADMIN)], function(req, res, next){
+  res.json(req.client);
+});
+
+
+// -- CHECKPOINTS
+router.post('/checkpoints', [mid.andRestrictTo(mid.SECURITY_GUARD)], function (req, res, next) {
+  var body = req.body;
+  body.created_by = req.auth._id;
+
+  var checkpoint = new Checkpoint(body);
+
+
+  checkpoint.save(function(err, data){
+    if (err) {return next(err);}
+
+    data.photos_uri = "/checkpoints/"+data._id+"/photos";
+    res.json(data);
+  });
+});
 
 
 
+router.post('/checkpoints/:checkpoint_id/photos', [mid.andRestrictTo(mid.SECURITY_GUARD)], function(req, res){
+
+  // create an incoming form object
+  var form = new formidable.IncomingForm();
+
+  // specify that we want to allow the user to upload multiple files in a single request
+  // form.multiples = true;
+
+  // store all uploads in the /{checkpoint_id}/uploads directory
+  var img_path = path.join(__dirname, './../uploads/'+req.params.checkpoint_id);
+  // img_path = path.join(__dirname, './../uploads/');
+  if (!fs.existsSync(img_path)){
+    fs.mkdirSync(img_path);
+  }
+  form.uploadDir = img_path;
+
+  //todo: when no file exists what to do
+  // every time a file has been uploaded successfully,
+  // rename it to it's orignal name
+  form.on('file', function(field, file) {
+    console.log("on file")
+    fs.rename(file.path, path.join(form.uploadDir, file.name));
+  });
+
+  // log any errors that occur
+  form.on('error', function(err) {
+    console.log('An error has occured: \n' + err);
+    res.json({success: false, error: err})
+  });
+
+  // once all the files have been uploaded, send a response to the client
+  form.on('end', function() {
+    res.json({success: true, message: 'Photo uploaded with success'});
+  });
+
+  // parse the incoming request containing the form data
+  form.parse(req);
+
+});
+
+router.get('/checkpoints/:checkpoint_id/photos', [mid.andRestrictTo(mid.SECURITY_GUARD)], function(req, res, next){
+  const testFolder = path.join(__dirname, './../uploads/'+req.params.checkpoint_id)
+
+  fs.readdir(testFolder, function(err, files) {
+    console.log(files)
+    if (!files)
+      files = []
+    res.json({photos: files})
+  })
+
+})
 
 module.exports = router;
+
